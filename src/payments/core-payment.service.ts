@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { CreatePaymentRequestDto } from './dto/create-payment-request.dto';
-
-export interface PaymentResult {
-  paymentId: string;
-  status: 'confirmed';
-}
+import type { CreatePaymentRequestDto } from './dto/create-payment-request.dto';
+import type { PaymentResult } from './types/payments.types';
 
 @Injectable()
 export class CorePaymentService {

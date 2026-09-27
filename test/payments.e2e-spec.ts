@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module';
 import { configureApplication } from '../src/configure-application';
 import { CorePaymentService } from '../src/payments/core-payment.service';
 
-describe('POST /payments', () => {
+describe('Pagos - POST /payments', () => {
   let app: INestApplication;
   const corePaymentService = {
     createPayment: jest.fn(async () => {
@@ -37,7 +37,7 @@ describe('POST /payments', () => {
     corePaymentService.createPayment.mockClear();
   });
 
-  it('coalesces simultaneous requests with the same idempotency key', async () => {
+  it('agrupa solicitudes simultáneas con la misma clave de idempotencia', async () => {
     const paymentRequest = { amountInMinorUnits: 1250, currency: 'GTQ' };
 
     const [first, second] = await Promise.all([
@@ -57,7 +57,7 @@ describe('POST /payments', () => {
     expect(corePaymentService.createPayment).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects reuse of a key with different payment data', async () => {
+  it('rechaza reutilizar una clave con datos de pago diferentes', async () => {
     await request(app.getHttpServer())
       .post('/payments')
       .set('Idempotency-Key', 'conflicting-payment')
@@ -73,7 +73,7 @@ describe('POST /payments', () => {
     expect(corePaymentService.createPayment).toHaveBeenCalledTimes(1);
   });
 
-  it('returns the public error contract for invalid payment data', async () => {
+  it('devuelve el contrato público de error para datos de pago inválidos', async () => {
     const response = await request(app.getHttpServer())
       .post('/payments')
       .set('Idempotency-Key', 'invalid-payment')
@@ -95,7 +95,7 @@ describe('POST /payments', () => {
     expect(response.body.timestamp).toEqual(expect.any(String));
   });
 
-  it('does not expose parser details for malformed JSON', async () => {
+  it('no expone detalles del parser cuando el JSON está malformado', async () => {
     const response = await request(app.getHttpServer())
       .post('/payments')
       .set('Content-Type', 'application/json')

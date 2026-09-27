@@ -1,14 +1,8 @@
 import 'dotenv/config';
-import { Provider } from '@nestjs/common';
+import type { Provider } from '@nestjs/common';
 import { requiredEnvironmentValue } from '../common/required-environment-value';
-
-export interface ExternalJwtConfig {
-  secret: string;
-  issuer: string;
-  audience: string;
-}
-
-export const AUTH_CONFIG = Symbol('AUTH_CONFIG');
+import { AUTH_CONFIG } from './constants/auth.constants';
+import type { ExternalJwtConfig } from './types/auth.types';
 
 export const authConfigProvider: Provider<ExternalJwtConfig> = {
   provide: AUTH_CONFIG,

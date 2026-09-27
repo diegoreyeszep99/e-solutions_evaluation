@@ -1,14 +1,11 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtPayload, verify, VerifyOptions } from 'jsonwebtoken';
-import { AUTH_CONFIG, ExternalJwtConfig } from './auth.config';
-
-export interface ExternalJwtPayload {
-  sub?: string;
-  iss: string;
-  aud: string | string[];
-  exp: number;
-  iat?: number;
-}
+import { verify } from 'jsonwebtoken';
+import type { JwtPayload, VerifyOptions } from 'jsonwebtoken';
+import { AUTH_CONFIG } from './constants/auth.constants';
+import type {
+  ExternalJwtConfig,
+  ExternalJwtPayload,
+} from './types/auth.types';
 
 @Injectable()
 export class ExternalJwtValidator {

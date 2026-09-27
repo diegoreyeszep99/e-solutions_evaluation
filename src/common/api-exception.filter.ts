@@ -5,32 +5,9 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
-
-interface PublicExceptionBody {
-  code?: string;
-  message?: string;
-  details?: unknown[];
-}
-
-const defaultErrors: Record<number, { code: string; message: string }> = {
-  [HttpStatus.BAD_REQUEST]: {
-    code: 'BAD_REQUEST',
-    message: 'Request is invalid',
-  },
-  [HttpStatus.UNAUTHORIZED]: {
-    code: 'UNAUTHORIZED',
-    message: 'Authentication failed',
-  },
-  [HttpStatus.CONFLICT]: {
-    code: 'CONFLICT',
-    message: 'Request conflicts with existing state',
-  },
-  [HttpStatus.INTERNAL_SERVER_ERROR]: {
-    code: 'INTERNAL_ERROR',
-    message: 'An unexpected error occurred',
-  },
-};
+import type { Request, Response } from 'express';
+import { DEFAULT_ERRORS } from './constants/api-error.constants';
+import type { PublicExceptionBody } from './types/api-error.types';
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
@@ -42,7 +19,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
-    const fallback = defaultErrors[statusCode] ?? defaultErrors[500];
+    const fallback = DEFAULT_ERRORS[statusCode] ?? DEFAULT_ERRORS[500];
     const exceptionBody = this.getPublicBody(exception);
 
     response.status(statusCode).json({

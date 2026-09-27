@@ -1,38 +1,14 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import {
-  CorePaymentService,
+import { CorePaymentService } from './core-payment.service';
+import type { CreatePaymentRequestDto } from './dto/create-payment-request.dto';
+import type {
+  IdempotencyRecord,
   PaymentResult,
-} from './core-payment.service';
-import { CreatePaymentRequestDto } from './dto/create-payment-request.dto';
-
-type PaymentRequestFingerprint = Readonly<{
-  [Key in keyof CreatePaymentRequestDto]: CreatePaymentRequestDto[Key];
-}>;
-
-interface IdempotencyRecord {
-  fingerprint: PaymentRequestFingerprint;
-  result: Promise<PaymentResult>;
-}
-
-function paymentRequestFingerprint(
-  paymentRequest: CreatePaymentRequestDto,
-): PaymentRequestFingerprint {
-  return {
-    amountInMinorUnits: paymentRequest.amountInMinorUnits,
-    currency: paymentRequest.currency,
-  };
-}
-
-function fingerprintsMatch(
-  left: PaymentRequestFingerprint,
-  right: PaymentRequestFingerprint,
-): boolean {
-  const keys = Object.keys(left) as (keyof PaymentRequestFingerprint)[];
-  return (
-    keys.length === Object.keys(right).length &&
-    keys.every((key) => left[key] === right[key])
-  );
-}
+} from './types/payments.types';
+import {
+  fingerprintsMatch,
+  paymentRequestFingerprint,
+} from './utils/payments.utils';
 
 @Injectable()
 export class PaymentsService {

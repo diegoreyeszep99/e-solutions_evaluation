@@ -1,8 +1,8 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { IntegrationTokenService } from './integration-token.service';
 
-describe('IntegrationTokenService', () => {
-  it('allows a token to be redeemed exactly once', () => {
+describe('Servicio de tokens de integración', () => {
+  it('permite consumir un token exactamente una vez', () => {
     const service = new IntegrationTokenService();
     const issued = service.issue();
 

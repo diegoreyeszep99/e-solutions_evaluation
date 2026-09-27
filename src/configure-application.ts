@@ -1,15 +1,10 @@
 import {
   BadRequestException,
-  INestApplication,
-  ValidationError,
   ValidationPipe,
 } from '@nestjs/common';
+import type { INestApplication, ValidationError } from '@nestjs/common';
+import type { ValidationDetail } from './common/types/api-error.types';
 import { ApiExceptionFilter } from './common/api-exception.filter';
-
-interface ValidationDetail {
-  field: string;
-  message: string;
-}
 
 function validationDetails(
   errors: ValidationError[],

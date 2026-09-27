@@ -2,7 +2,7 @@ import { sign } from 'jsonwebtoken';
 import { UnauthorizedException } from '@nestjs/common';
 import { ExternalJwtValidator } from './external-jwt.validator';
 
-describe('ExternalJwtValidator', () => {
+describe('Validador de JWT externos', () => {
   const config = {
     secret: 'test-secret-that-is-long-enough',
     issuer: 'trusted-integration',
@@ -10,7 +10,7 @@ describe('ExternalJwtValidator', () => {
   };
   const validator = new ExternalJwtValidator(config);
 
-  it('accepts a valid HS256 token for the configured issuer and audience', async () => {
+  it('acepta un token HS256 válido para el emisor y la audiencia configurados', async () => {
     const token = sign(
       { sub: 'integration-client' },
       config.secret,
@@ -29,7 +29,7 @@ describe('ExternalJwtValidator', () => {
     });
   });
 
-  it('rejects an expired token', () => {
+  it('rechaza un token vencido', () => {
     const token = sign({ sub: 'integration-client' }, config.secret, {
       algorithm: 'HS256',
       issuer: config.issuer,
@@ -40,7 +40,7 @@ describe('ExternalJwtValidator', () => {
     expect(() => validator.validate(token)).toThrow(UnauthorizedException);
   });
 
-  it('rejects a token with an invalid signature', () => {
+  it('rechaza un token con firma inválida', () => {
     const token = sign({ sub: 'integration-client' }, 'different-secret', {
       algorithm: 'HS256',
       issuer: config.issuer,

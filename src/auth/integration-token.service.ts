@@ -1,16 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
-
-const TOKEN_LIFETIME_MS = 60 * 60 * 1000;
-
-interface StoredIntegrationToken {
-  expiresAt: number;
-}
-
-export interface IssuedIntegrationToken {
-  integrationToken: string;
-  expiresAt: string;
-}
+import { INTEGRATION_TOKEN_LIFETIME_MS } from './constants/auth.constants';
+import type {
+  IssuedIntegrationToken,
+  StoredIntegrationToken,
+} from './types/auth.types';
 
 @Injectable()
 export class IntegrationTokenService {
@@ -18,7 +12,7 @@ export class IntegrationTokenService {
 
   issue(): IssuedIntegrationToken {
     const integrationToken = randomBytes(32).toString('base64url');
-    const expiresAt = Date.now() + TOKEN_LIFETIME_MS;
+    const expiresAt = Date.now() + INTEGRATION_TOKEN_LIFETIME_MS;
 
     this.tokens.set(this.hash(integrationToken), { expiresAt });
 
