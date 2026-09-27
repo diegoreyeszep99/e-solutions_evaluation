@@ -1,4 +1,120 @@
-# Parte Teorica
+# Integration Payment Service
+
+Servicio mínimo en NestJS que valida acceso de integraciones y evita crear pagos duplicados. El estado se guarda en memoria para mantener el ejercicio enfocado en seguridad, concurrencia e idempotencia.
+
+## Requisitos
+
+- Node.js 20 o superior.
+- npm.
+
+## Configuración
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Variables disponibles:
+
+| Variable | Descripción |
+| --- | --- |
+| `INTEGRATION_JWT_SECRET` | Clave compartida usada para verificar JWT con HS256. |
+| `INTEGRATION_JWT_ISSUER` | Emisor exacto permitido en `iss`. |
+| `INTEGRATION_JWT_AUDIENCE` | Audiencia exacta permitida en `aud`. |
+| `CORE_DELAY_MS` | Demora del core simulado en milisegundos. |
+| `PORT` | Puerto HTTP; por defecto `3000`. |
+
+Iniciar el servicio:
+
+```bash
+npm run start:dev
+```
+
+## Flujo de autenticación
+
+Generar un JWT externo válido usando la configuración de `.env`:
+
+```bash
+npm run token:generate
+```
+
+Intercambiarlo por un token de integración opaco, válido durante 60 minutos:
+
+```bash
+curl -X POST http://localhost:3000/auth/login-integration \
+  -H "Content-Type: application/json" \
+  -d '{"jwt":"<external-jwt>"}'
+```
+
+El JWT se acepta únicamente si tiene firma válida con la clave configurada, algoritmo HS256, `exp` vigente y valores exactos para `iss` y `aud`.
+
+Consumir el token de integración:
+
+```bash
+curl -i -X POST http://localhost:3000/auth/redeem \
+  -H "Content-Type: application/json" \
+  -d '{"integrationToken":"<opaque-token>"}'
+```
+
+El primer consumo responde `204 No Content`. Un token desconocido, vencido o consumido responde `401 Unauthorized` sin revelar cuál condición falló. El servicio guarda solamente el hash SHA-256 del token, no el valor entregado al cliente.
+
+## Crear pagos
+
+```bash
+curl -X POST http://localhost:3000/payments \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: payment-123" \
+  -d '{"amountInMinorUnits":1250,"currency":"GTQ"}'
+```
+
+`amountInMinorUnits` es un entero positivo expresado en centavos de quetzal y `currency` acepta únicamente el código ISO 4217 `GTQ`.
+
+El registro idempotente se crea antes de esperar al core. Dos solicitudes simultáneas con la misma llave y los mismos datos comparten la misma promesa, por lo que el core se ejecuta una sola vez y ambas reciben el mismo resultado. Reutilizar una llave con datos diferentes responde `409 Conflict`.
+
+Los flujos de autenticación y pagos son independientes porque la consigna no establece que el consumo de un token autorice la creación de pagos.
+
+## Errores
+
+Todas las respuestas de error usan la misma estructura y omiten mensajes internos o stack traces:
+
+```json
+{
+  "statusCode": 400,
+  "code": "VALIDATION_ERROR",
+  "message": "Request validation failed",
+  "details": [
+    {
+      "field": "amountInMinorUnits",
+      "message": "amountInMinorUnits must not be less than 1"
+    }
+  ],
+  "path": "/payments",
+  "timestamp": "2026-09-26T12:00:00.000Z"
+}
+```
+
+## Pruebas
+
+```bash
+npm run test:unit
+npm run test:e2e
+npm run typecheck
+npm run build
+```
+
+Las pruebas unitarias cubren JWT válido, vencido y con firma incorrecta. La prueba con Supertest envía dos pagos simultáneos con la misma llave y comprueba que el core se invoca una sola vez.
+
+## Varias réplicas
+
+La memoria local no sirve como autoridad cuando existen varias réplicas: cada proceso tendría tokens y registros idempotentes diferentes.
+
+Para el token de un solo uso guardaría su hash en Redis con TTL de 60 minutos. El consumo usaría `GETDEL` o un script Lua equivalente, de modo que leer y eliminar sean una única operación atómica. Sólo una réplica podría obtener el registro; las demás recibirían el mismo rechazo genérico.
+
+Para idempotencia usaría Redis o una base de datos compartida con un registro que contenga la llave, el hash canónico de la solicitud, el estado (`processing`, `completed` o `unknown`) y la respuesta final. Una restricción única o `SET NX` decidiría atómicamente qué réplica inicia el pago. Las demás esperarían o consultarían ese registro y devolverían la respuesta almacenada, sin llamar otra vez al core.
+
+También enviaría la misma llave de idempotencia al core. Si el core procesa el pago pero la respuesta se pierde, el registro permanece `unknown` hasta consultar o conciliar el resultado; no se crea un segundo pago. Finalmente, aplicaría una política explícita de retención y limpieza, métricas para registros atascados y cifrado o controles de acceso sobre el almacenamiento compartido.
+
+# Parte Teórica
 
 ## ¿Qué pasa en el event loop de Node.js si ejecutas una operación intensiva en CPU dentro de un endpoint, como generar un PDF? ¿Cómo lo resolverías?
 
