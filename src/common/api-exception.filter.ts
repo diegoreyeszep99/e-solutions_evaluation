@@ -66,8 +66,12 @@ export class ApiExceptionFilter implements ExceptionFilter {
     }
 
     const body = response as PublicExceptionBody;
+    if (typeof body.code !== 'string') {
+      return {};
+    }
+
     return {
-      code: typeof body.code === 'string' ? body.code : undefined,
+      code: body.code,
       message: typeof body.message === 'string' ? body.message : undefined,
       details: Array.isArray(body.details) ? body.details : undefined,
     };

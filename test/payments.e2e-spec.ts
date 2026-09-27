@@ -38,17 +38,17 @@ describe('POST /payments', () => {
   });
 
   it('coalesces simultaneous requests with the same idempotency key', async () => {
-    const payment = { amountInMinorUnits: 1250, currency: 'GTQ' };
+    const paymentRequest = { amountInMinorUnits: 1250, currency: 'GTQ' };
 
     const [first, second] = await Promise.all([
       request(app.getHttpServer())
         .post('/payments')
         .set('Idempotency-Key', 'same-payment')
-        .send(payment),
+        .send(paymentRequest),
       request(app.getHttpServer())
         .post('/payments')
         .set('Idempotency-Key', 'same-payment')
-        .send(payment),
+        .send(paymentRequest),
     ]);
 
     expect(first.status).toBe(201);
@@ -93,5 +93,23 @@ describe('POST /payments', () => {
       ]),
     );
     expect(response.body.timestamp).toEqual(expect.any(String));
+  });
+
+  it('does not expose parser details for malformed JSON', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/payments')
+      .set('Content-Type', 'application/json')
+      .set('Idempotency-Key', 'malformed-request')
+      .send('{"amountInMinorUnits":')
+      .expect(400);
+
+    expect(response.body).toMatchObject({
+      statusCode: 400,
+      code: 'BAD_REQUEST',
+      message: 'Request is invalid',
+      details: [],
+      path: '/payments',
+    });
+    expect(response.body.message).not.toContain('JSON');
   });
 });

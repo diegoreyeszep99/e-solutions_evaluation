@@ -5,7 +5,7 @@ import {
   Headers,
   Post,
 } from '@nestjs/common';
-import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePaymentRequestDto } from './dto/create-payment-request.dto';
 import { PaymentsService } from './payments.service';
 
 @Controller('payments')
@@ -15,7 +15,7 @@ export class PaymentsController {
   @Post()
   create(
     @Headers('idempotency-key') idempotencyKey: string | undefined,
-    @Body() payment: CreatePaymentDto,
+    @Body() paymentRequest: CreatePaymentRequestDto,
   ) {
     if (!idempotencyKey || idempotencyKey.length > 128) {
       throw new BadRequestException({
@@ -24,6 +24,6 @@ export class PaymentsController {
       });
     }
 
-    return this.paymentsService.create(idempotencyKey, payment);
+    return this.paymentsService.create(idempotencyKey, paymentRequest);
   }
 }

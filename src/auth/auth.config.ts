@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { Provider } from '@nestjs/common';
+import { requiredEnvironmentValue } from '../common/required-environment-value';
 
 export interface ExternalJwtConfig {
   secret: string;
@@ -8,15 +9,6 @@ export interface ExternalJwtConfig {
 }
 
 export const AUTH_CONFIG = Symbol('AUTH_CONFIG');
-
-function requiredEnvironmentValue(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-
-  return value;
-}
 
 export const authConfigProvider: Provider<ExternalJwtConfig> = {
   provide: AUTH_CONFIG,

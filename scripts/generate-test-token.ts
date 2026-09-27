@@ -1,14 +1,6 @@
 import 'dotenv/config';
 import { sign } from 'jsonwebtoken';
-
-function requiredEnvironmentValue(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-
-  return value;
-}
+import { requiredEnvironmentValue } from '../src/common/required-environment-value';
 
 const token = sign(
   { sub: process.env.TEST_TOKEN_SUBJECT ?? 'test-integration' },

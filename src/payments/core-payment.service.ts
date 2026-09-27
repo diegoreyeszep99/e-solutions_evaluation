@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { CreatePaymentDto } from './dto/create-payment.dto';
+import { CreatePaymentRequestDto } from './dto/create-payment-request.dto';
 
 export interface PaymentResult {
   paymentId: string;
@@ -9,7 +9,9 @@ export interface PaymentResult {
 
 @Injectable()
 export class CorePaymentService {
-  async createPayment(_payment: CreatePaymentDto): Promise<PaymentResult> {
+  async createPayment(
+    _paymentRequest: CreatePaymentRequestDto,
+  ): Promise<PaymentResult> {
     const delayMs = Number(process.env.CORE_DELAY_MS ?? 250);
     await new Promise((resolve) => setTimeout(resolve, delayMs));
 
